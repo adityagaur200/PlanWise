@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -20,8 +21,9 @@ public class TaskService {
     public TaskService(WebClient.Builder webClientBuilder) {
         this.webClientBuilder = webClientBuilder;
     }
-
+// CREATING TASK SERVICE
     public void createTask(TaskRequest taskRequest) {
+// MAPPING MY TASKREQUEST AND TASK MODEL
         Task task = Task.builder()
                 .assignedTaskDate(taskRequest.getAssignedTaskDate())
                 .assignedTaskTime(taskRequest.getAssignedTaskTime())
@@ -30,9 +32,11 @@ public class TaskService {
                 .deadline(taskRequest.getDeadline())
                 .assignees(taskRequest.getAssignees())
                 .build();
+// SAVEING MY MODEL..
         taskRepo.save(task);
     }
 
+// CREATE GET TASK SERVICE TO GET ALL THE TASKS.
     public List<TaskResponse> getTasks()
     {
         List<Task> tasks = taskRepo.findAll();
@@ -40,6 +44,7 @@ public class TaskService {
 
     }
 
+// MAPPING TO MY TASKRESPONSE DTO.
     private TaskResponse mapToTaskResponse(Task task) {
         TaskResponse taskResponse = TaskResponse.builder().id(task.getid())
                 .taskDescription(task.getTaskDescription()).assignedTaskDate(task.getAssignedTaskDate()).taskName(task.getTaskName())
@@ -47,13 +52,40 @@ public class TaskService {
         return taskResponse;
     }
 
+// CREATING SERVICE FOR FILTER THE TASK ON THE BASICS OF USER
     public List<TaskResponse> getFilterTask(String user) {
+        //USING WEBCLIENT AND SEND AND RETRIVEING THE DATA.
        TaskResponse[] TaskResponseArray = webClientBuilder.build().get()
                .uri("http://localhost:3030/api/Task/task").retrieve().bodyToMono(TaskResponse[].class).block();
        if(TaskResponseArray == null)
        {
            return List.of();
        }
+       // RETURNING THE LIST
        return List.of(TaskResponseArray).stream().filter(taskResponse -> taskResponse.getAssignees().contains(user)).collect(Collectors.toList());
     }
+
+// UPDATING THE RESPONSE
+    public List<TaskResponse> getUpdatedTask(String id, TaskRequest taskRequest) {
+        Optional<Task> tasks = taskRepo.findById(id);
+
+        if(tasks.isPresent())
+        {
+            Task task = tasks.get();
+            task.setTaskStatus(taskRequest.getTaskStatus());
+            taskRepo.save(task);
+            return List.of(mapToTaskupdatedResponse(task));
+        }
+        else {
+            throw new RuntimeException ("Task not found with id: " + id);
+        }
+    }
+    private TaskResponse mapToTaskupdatedResponse(Task task)
+    {
+        return TaskResponse.builder().taskStatus(task.getTaskStatus()).build();
+    }
+
+
 }
+
+

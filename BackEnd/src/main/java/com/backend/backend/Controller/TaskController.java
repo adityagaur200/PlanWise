@@ -41,4 +41,12 @@ public class TaskController
         return taskService.getFilterTask(user);
     }
 
+    //UPDATING THE TASK.
+    @PutMapping("/task/{id}")
+    public List<TaskResponse> getUpdatedTask(@PathVariable String id, @RequestBody TaskRequest taskRequest)
+    {
+        List<TaskResponse> updatedTask = taskService.getUpdatedTask(id,taskRequest);
+        return updatedTask;
+    }
+
 }

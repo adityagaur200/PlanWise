@@ -9,7 +9,6 @@ import java.util.List;
 @Getter
 @Setter
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
 @Builder // Correct placement of @Builder
 public class Task {
@@ -71,9 +70,7 @@ public class Task {
     public String getTaskStatus() {
         return taskStatus;
     }
-    public void setTaskStatus(String taskStatus) {
-        this.taskStatus = taskStatus;
-    }
+
     public String getDeadline() {
         return deadline;
     }
@@ -85,6 +82,13 @@ public class Task {
     }
     public void setAssignees(List<String> assignees) {
         this.assignees = assignees;
+    }
+
+
+    public String setTaskStatus(String taskStatus)
+    {
+        this.taskStatus = taskStatus;
+        return taskStatus;
     }
 
 
