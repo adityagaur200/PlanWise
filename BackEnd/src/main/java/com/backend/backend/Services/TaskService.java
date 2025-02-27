@@ -17,6 +17,8 @@ public class TaskService {
     @Autowired
     private TaskRepo taskRepo;
     private final WebClient.Builder webClientBuilder;
+    @Autowired
+    private JWTservice jwtService;
 
     public TaskService(WebClient.Builder webClientBuilder) {
         this.webClientBuilder = webClientBuilder;
@@ -47,16 +49,18 @@ public class TaskService {
 // MAPPING TO MY TASKRESPONSE DTO.
     private TaskResponse mapToTaskResponse(Task task) {
         TaskResponse taskResponse = TaskResponse.builder().id(task.getid())
-                .taskDescription(task.getTaskDescription()).assignedTaskDate(task.getAssignedTaskDate()).taskName(task.getTaskName())
-                .assignees(task.getAssignees()).deadline(task.getDeadline()).taskStatus(task.getTaskStatus()).build();
-        return taskResponse;
-    }
+                               .taskDescription(task.getTaskDescription()).assignedTaskDate(task.getAssignedTaskDate()).taskName(task.getTaskName())
+                               .assignees(task.getAssignees()).deadline(task.getDeadline()).taskStatus(task.getTaskStatus()).build();
+                           return taskResponse;
+                       }
 
 // CREATING SERVICE FOR FILTER THE TASK ON THE BASICS OF USER
-    public List<TaskResponse> getFilterTask(String user) {
-        //USING WEBCLIENT AND SEND AND RETRIVEING THE DATA.
-       TaskResponse[] TaskResponseArray = webClientBuilder.build().get()
-               .uri("http://localhost:3030/api/Task/task").retrieve().bodyToMono(TaskResponse[].class).block();
+        public List<TaskResponse> getFilterTask(String user, String jwtToken) {
+            //USING WEBCLIENT AND SEND AND RETRIVEING THE DATA.
+            TaskResponse[] TaskResponseArray = webClientBuilder.build().get()
+                    .uri("http://localhost:3030/api/Task/task")
+                    .headers(httpHeaders -> httpHeaders.setBearerAuth(jwtToken))
+               .retrieve().bodyToMono(TaskResponse[].class).block();
        if(TaskResponseArray == null)
        {
            return List.of();
