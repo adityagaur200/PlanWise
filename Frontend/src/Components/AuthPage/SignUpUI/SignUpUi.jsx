@@ -1,15 +1,11 @@
 "use client";
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom"; 
 import { Label } from "./label.jsx";
 import { Input } from "./input.jsx";
 import { cn } from "@/libs/utils";
-import {
-  IconBrandGithub,
-  IconBrandGoogle,
-} from "@tabler/icons-react";
-import { Link } from "@mui/material";
 
-export function SignupFormDemo() {
+export function SignupForm() {
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -17,6 +13,7 @@ export function SignupFormDemo() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.id]: e.target.value });
@@ -35,11 +32,17 @@ export function SignupFormDemo() {
       });
 
       const data = await response.json();
+
       if (!response.ok) {
         throw new Error(data.message || "Signup failed");
       }
 
+      // ✅ Store JWT token and username in localStorage
+      localStorage.setItem("jwtToken", data.token);
+      localStorage.setItem("username", data.username);
+
       alert("Signup successful!");
+      navigate("/"); 
     } catch (error) {
       setError(error.message);
     } finally {
@@ -52,20 +55,18 @@ export function SignupFormDemo() {
       <form className="my-8" onSubmit={handleSubmit}>
         <LabelInputContainer className="mb-4">
           <Label htmlFor="username">Username</Label>
-          <Input id="username" placeholder="TylerDurden" type="text" onChange={handleChange} />
+          <Input id="username" placeholder="User Name" type="text" onChange={handleChange} />
         </LabelInputContainer>
         <LabelInputContainer className="mb-4">
           <Label htmlFor="email">Email Address</Label>
-          <Input id="email" placeholder="projectmayhem@fc.com" type="email" onChange={handleChange} />
+          <Input id="email" placeholder="project@gmail.com" type="email" onChange={handleChange} />
         </LabelInputContainer>
         <LabelInputContainer className="mb-4">
           <Label htmlFor="password">Password</Label>
           <Input id="password" placeholder="••••••••" type="password" onChange={handleChange} />
         </LabelInputContainer>
         {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
-        <button
-          className="bg-gradient-to-br relative group/btn from-black dark:from-zinc-900 dark:to-zinc-900 to-neutral-600 block dark:bg-zinc-800 w-full text-white rounded-md h-10 font-medium"
-          type="submit" disabled={loading}>
+        <button className="bg-black w-full text-white rounded-md h-10 font-medium" type="submit" disabled={loading}>
           {loading ? "Signing up..." : "Sign up →"}
         </button>
       </form>

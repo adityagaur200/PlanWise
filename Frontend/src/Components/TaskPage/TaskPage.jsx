@@ -1,25 +1,57 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import TaskBar from "./TaskBar";
 
 const TaskPage = () => {
-  const [tasks, setTasks] = useState([
-    { id: 1, name: "Task 1" },
-    { id: 2, name: "Task 2" },
-    { id: 3, name: "Task 3" },
-    { id: 4, name: "Task 4" },
-  ]);
+  const [tasks, setTasks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const handleTaskDone = (taskId) => {
-    setTasks(tasks.filter((task) => task.id !== taskId));
-  };
+  // ✅ Get user info from localStorage
+  const username = localStorage.getItem("username");
+  const jwtToken = localStorage.getItem("token"); // Ensure it's stored as "token"
+
+  useEffect(() => {
+    if (!username || !jwtToken) {
+      setError("User not logged in");
+      setLoading(false);
+      return;
+    }
+
+    const fetchTasks = async () => {
+      try {
+        const response = await fetch(`http://localhost:3030/api/Task/task/${username}`, {
+          method: "GET",
+          headers: { 
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${jwtToken}` // ✅ Attach JWT token
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch tasks");
+        }
+
+        const data = await response.json();
+        setTasks(data);
+      } catch (error) {
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTasks();
+  }, [username, jwtToken]);
+
+  if (loading) return <p>Loading tasks...</p>;
+  if (error) return <p style={{ color: "red" }}>{error}</p>;
 
   return (
-    <div style={{ display: "flex", flexDirection: "row" }}>
-      <div style={{ display: "flex", flexDirection: "column", width: "100%", gap: "0.5vh" }}>
-        {tasks.map((task) => (
-          <TaskBar key={task.id} taskId={task.id} onTaskDone={handleTaskDone} />
-        ))}
-      </div>
+    <div>
+      <h1>Task List</h1>
+      {tasks.length === 0 ? <p>No tasks assigned</p> : tasks.map((task) => (
+        <TaskBar key={task.id} task={task} onTaskDone={() => console.log("Task Done")} />
+      ))}
     </div>
   );
 };

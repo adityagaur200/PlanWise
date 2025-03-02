@@ -8,12 +8,12 @@ import { Link } from "@mui/material";
 export function Login() {
   const [formData, setFormData] = useState({
     username: "",
-    password: ""
+    password: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Handle input changes and update state properly
+  // Handle input changes
   const handleChange = (e) => {
     setFormData((prevFormData) => ({
       ...prevFormData,
@@ -25,53 +25,60 @@ export function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
-  
-    if (!formData.username || !formData.password) {
-      setError("Please fill in all fields.");
-      return;
-    }
-  
     setLoading(true);
-  
+
     try {
       const response = await fetch("http://localhost:3030/user/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
-        credentials: "include", // Include cookies if needed
+        credentials: "include",
       });
-  
-      // ✅ Check if response is not JSON (JWT case)
-      const contentType = response.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        const token = await response.text(); // JWT is usually a plain text response
-        console.log("Received JWT Token:", token);
-        alert("Login successful!");
+
+      if (response.status === 401) {
+        setError("Invalid username or password.");
+        setLoading(false);
         return;
       }
-  
-      // If it's JSON, parse normally
-      const data = await response.json();
-  
-      if (!response.ok) {
-        throw new Error(data.message || "Login failed. Please check your credentials.");
+
+      const contentType = response.headers.get("content-type");
+
+      let token = null;
+      if (!contentType || !contentType.includes("application/json")) {
+        token = await response.text();
+      } else {
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.message || "Login failed. Please check your credentials.");
+        }
+        token = data.token;
       }
-  
-      alert("Login successful!");
-      console.log("User data:", data);
+
+      if (!token) {
+        setError("Login failed: No token received.");
+        setLoading(false);
+        return;
+      }
+
+      console.log("Received JWT Token:", token);
+
+      // Store token and username in localStorage
+      localStorage.setItem("token", token);
+      localStorage.setItem("username", formData.username); // Store username
+
+      window.location.href = "/"; // Redirect after successful login
     } catch (error) {
       setError(error.message);
     } finally {
       setLoading(false);
     }
   };
-  
 
   return (
     <div className="max-w-md w-full mx-auto rounded-none md:rounded-2xl p-4 md:p-8 shadow-input bg-white dark:bg-black">
       <form className="my-8" onSubmit={handleSubmit}>
         <LabelInputContainer className="mb-4">
-          <Label htmlFor="email">UserName</Label>
+          <Label htmlFor="username">UserName</Label>
           <Input 
             id="username" 
             placeholder="User Name"
@@ -79,7 +86,7 @@ export function Login() {
             onChange={handleChange} 
           />
         </LabelInputContainer>
-        
+
         <LabelInputContainer className="mb-4">
           <Label htmlFor="password">Password</Label>
           <Input 
@@ -113,15 +120,6 @@ export function Login() {
     </div>
   );
 }
-
-const BottomGradient = () => {
-  return (
-    <>
-      <span className="group-hover/btn:opacity-100 block transition duration-500 opacity-0 absolute h-px w-full -bottom-px inset-x-0 bg-gradient-to-r from-transparent via-cyan-500 to-transparent" />
-      <span className="group-hover/btn:opacity-100 blur-sm block transition duration-500 opacity-0 absolute h-px w-1/2 mx-auto -bottom-px inset-x-10 bg-gradient-to-r from-transparent via-indigo-500 to-transparent" />
-    </>
-  );
-};
 
 const LabelInputContainer = ({ children, className }) => {
   return (

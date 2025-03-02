@@ -9,6 +9,7 @@ import lombok.*;
 @NoArgsConstructor
 public class ChatMessage {
     private String sender;
+    private String receiver;
     private String content;  // ✅ Added this to store the actual message content
     private String type; // Should be a String to match the incoming JSON
 
@@ -27,6 +28,14 @@ public class ChatMessage {
         this.type = type;
     }
 
+    public void setReceiver(String receiver) {
+        this.receiver = receiver;
+    }
+
+    public String getReceiver() {
+        return receiver;
+    }
+
     public ChatMessage setContent(String content) {
             this.content = content;
             return this;
@@ -36,6 +45,7 @@ public class ChatMessage {
     public String toString() {
         return "ChatMessage{" +
                 "sender='" + sender + '\'' +
+                ", receiver='" + receiver + '\'' + // ✅ Include receiver
                 ", content='" + content + '\'' +
                 ", type='" + type + '\'' +
                 '}';

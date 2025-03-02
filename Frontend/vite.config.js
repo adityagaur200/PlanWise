@@ -10,5 +10,14 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  server: {
+    proxy: {
+      "/user": {
+        target: "http://localhost:3030",
+        changeOrigin: true,
+        secure: false
+      }
+    }
+  }
   
 })

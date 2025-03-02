@@ -2,7 +2,7 @@ import { Box, Stack } from '@mui/material';
 import React from 'react';
 import { useLocation } from 'react-router-dom';
 import logo from '../../assests/logo.png';
-import { SignupFormDemo } from './SignUpUI/SignUpUi';
+import { SignupForm } from './SignUpUI/SignUpUi';
 import { Login } from './SignUpUI/LogInui';
 
 const SignUp = () => {
@@ -19,7 +19,7 @@ const SignUp = () => {
     >
       <img src={logo} alt="logo" width={800} height={800} />
       <Box width="500px" height="500px" marginBottom="50px">
-        {isLoginPage ? <Login /> : <SignupFormDemo />}
+        {isLoginPage ? <Login /> : <SignupForm/>}
       </Box>
     </Stack>
   );
