@@ -24,21 +24,23 @@ public class TaskService {
         this.webClientBuilder = webClientBuilder;
     }
 // CREATING TASK SERVICE
-    public void createTask(TaskRequest taskRequest) {
-// MAPPING MY TASKREQUEST AND TASK MODEL
+    public Task createTask(TaskRequest taskRequest) {
+    // Mapping request to Task model
         Task task = Task.builder()
-                .assignedTaskDate(taskRequest.getAssignedTaskDate())
-                .assignedTaskTime(taskRequest.getAssignedTaskTime())
-                .taskStatus(taskRequest.getTaskStatus())
-                .taskName(taskRequest.getTaskName())
-                .deadline(taskRequest.getDeadline())
-                .assignees(taskRequest.getAssignees())
-                .build();
-// SAVEING MY MODEL..
-        taskRepo.save(task);
-    }
+            .assignedTaskDate(taskRequest.getAssignedTaskDate())
+            .assignedTaskTime(taskRequest.getAssignedTaskTime())
+            .taskStatus(taskRequest.getTaskStatus())
+            .taskName(taskRequest.getTaskName())
+            .deadline(taskRequest.getDeadline())
+            .assignees(taskRequest.getAssignees())
+            .build();
 
-// CREATE GET TASK SERVICE TO GET ALL THE TASKS.
+    // Saving task in DB and returning it
+    return taskRepo.save(task);
+}
+
+
+    // CREATE GET TASK SERVICE TO GET ALL THE TASKS.
     public List<TaskResponse> getTasks()
     {
         List<Task> tasks = taskRepo.findAll();
@@ -55,7 +57,7 @@ public class TaskService {
                        }
 
 // CREATING SERVICE FOR FILTER THE TASK ON THE BASICS OF USER
-        public List<TaskResponse> getFilterTask(String user, String jwtToken) {
+    public List<TaskResponse> getFilterTask(String user, String jwtToken) {
             //USING WEBCLIENT AND SEND AND RETRIVEING THE DATA.
             TaskResponse[] TaskResponseArray = webClientBuilder.build().get()
                     .uri("http://localhost:3030/api/Task/task")
@@ -70,20 +72,21 @@ public class TaskService {
     }
 
 // UPDATING THE RESPONSE
-    public List<TaskResponse> getUpdatedTask(String id, TaskRequest taskRequest) {
-        Optional<Task> tasks = taskRepo.findById(id);
+    public List<TaskResponse> getUpdatedTask(String id, TaskRequest taskRequest)
+    {
+        Optional<Task> taskOptional = taskRepo.findById(id);
 
-        if(tasks.isPresent())
-        {
-            Task task = tasks.get();
-            task.setTaskStatus(taskRequest.getTaskStatus());
-            taskRepo.save(task);
+        if (taskOptional.isPresent()) {
+            Task task = taskOptional.get();
+            task.setTaskStatus(taskRequest.getTaskStatus()); // ✅ Update status
+            taskRepo.save(task); // ✅ Save changes
             return List.of(mapToTaskupdatedResponse(task));
         }
         else {
-            throw new RuntimeException ("Task not found with id: " + id);
+        throw new RuntimeException("Task not found with id: " + id);
         }
     }
+
     private TaskResponse mapToTaskupdatedResponse(Task task)
     {
         return TaskResponse.builder().taskStatus(task.getTaskStatus()).build();

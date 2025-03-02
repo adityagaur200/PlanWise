@@ -1,6 +1,5 @@
 package com.backend.backend.DTO;
 
-import com.backend.backend.Model.Task;
 import lombok.*;
 
 import java.util.List;

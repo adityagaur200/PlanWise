@@ -2,12 +2,19 @@ package com.backend.backend.Controller;
 
 import com.backend.backend.DTO.TaskRequest;
 import com.backend.backend.DTO.TaskResponse;
+import com.backend.backend.Model.Task;
+import com.backend.backend.Repository.TaskRepo;
 import com.backend.backend.Services.TaskService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.logging.Logger;
 
 @RestController
@@ -19,16 +26,22 @@ public class TaskController
 
     @Autowired
     public final TaskService taskService;
-
-    public TaskController(TaskService taskService) {
+    public final TaskRepo taskRepo;
+    public TaskController(TaskService taskService, TaskRepo taskRepo) {
         this.taskService = taskService;
+        this.taskRepo = taskRepo;
     }
 
     //CREATING TASK
     @PostMapping("/create")
-    public void createTask(@RequestBody TaskRequest taskRequest)
-    {
+    public ResponseEntity<Map<String, String>> createTask(@RequestBody TaskRequest taskRequest) {
         taskService.createTask(taskRequest);
+
+        // Sending a JSON response back
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Task created successfully");
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     //GETTING TASK
@@ -58,10 +71,17 @@ public class TaskController
 
     //UPDATING THE TASK.
     @PutMapping("/task/{id}")
-    public List<TaskResponse> getUpdatedTask(@PathVariable String id, @RequestBody TaskRequest taskRequest)
-    {
-        List<TaskResponse> updatedTask = taskService.getUpdatedTask(id,taskRequest);
-        return updatedTask;
+    public ResponseEntity<?> updateTask(@PathVariable String id, @RequestBody TaskRequest taskRequest) {
+        try {
+            List<TaskResponse> updatedTask = taskService.getUpdatedTask(id, taskRequest);
+            return ResponseEntity.ok(updatedTask); // ✅ Return proper HTTP response
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage()); // ✅ Handle task not found
+        }
     }
+
+
+
+
 
 }
