@@ -12,7 +12,8 @@ public class ChatMessage {
     private String receiver;
     private String content;  // ✅ Added this to store the actual message content
     private String type; // Should be a String to match the incoming JSON
-
+    private String sdp;
+    private IceCandidate candidate;
     public String getSender() {
                 return sender;
     }
@@ -28,6 +29,10 @@ public class ChatMessage {
         this.type = type;
     }
 
+    public String getType() {
+        return type;
+    }
+
     public void setReceiver(String receiver) {
         this.receiver = receiver;
     }
@@ -40,7 +45,12 @@ public class ChatMessage {
             this.content = content;
             return this;
     }
+    public String getSdp() { return sdp; }
+    public void setSdp(String sdp) { this.sdp = sdp; }
 
+    public IceCandidate getCandidate() {
+        return candidate;
+    }
     @Override
     public String toString() {
         return "ChatMessage{" +
