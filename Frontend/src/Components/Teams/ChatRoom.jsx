@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useRef } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Client } from "@stomp/stompjs";
 import { Box, Button, Stack, TextField, Typography } from "@mui/material";
+import { CiVideoOn } from "react-icons/ci";
 
 const ChatRoom = () => {
   const location = useLocation();
@@ -11,6 +12,12 @@ const ChatRoom = () => {
   const [messages, setMessages] = useState([]);
   const stompClientRef = useRef(null);
   const messagesEndRef = useRef(null);
+
+  const navigate = useNavigate();
+  const handleVideoCall =()=>
+  {
+    navigate("/videocall", { state: { receiver } })
+  }
 
   useEffect(() => {
     const client = new Client({
@@ -80,6 +87,7 @@ const ChatRoom = () => {
       <Typography variant="h5" fontWeight={600}>
         Chat with {receiver || "Unknown"}
       </Typography>
+      <CiVideoOn  onClick={handleVideoCall}/>
 
       <Box sx={{ flex: 1, overflowY: "auto", border: "1px solid #ddd", padding: 2, borderRadius: 2 }}>
         {messages.length === 0 ? (
