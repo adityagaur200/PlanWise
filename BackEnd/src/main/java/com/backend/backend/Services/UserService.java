@@ -29,6 +29,16 @@ public class UserService {
     private final BCryptPasswordEncoder Bcrypt = new BCryptPasswordEncoder(12);
 
     public Users registerUser(UserDTO userDTO) {
+        // Check if a user with the same username or email already exists
+        if (userRepository.existsByUsername(userDTO.getUsername())) {
+            throw new RuntimeException("Username is already taken");
+        }
+
+        if (userRepository.existsByEmail(userDTO.getEmail())) {
+            throw new RuntimeException("Email is already registered");
+        }
+
+        // Create a new user instance
         Users user = new Users();
         user.setUsername(userDTO.getUsername());
 
@@ -36,9 +46,11 @@ public class UserService {
         user.setPassword(Bcrypt.encode(userDTO.getPassword()));
 
         user.setEmail(userDTO.getEmail());
-        userRepository.save(user);
-        return user;
+
+        // Save the user to the database
+        return userRepository.save(user);
     }
+
 
 
 
