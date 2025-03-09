@@ -4,7 +4,7 @@ import { Stack, Typography, Button, Divider } from '@mui/material';
 import { GoHome } from 'react-icons/go';
 import { AiOutlineTeam } from 'react-icons/ai';
 import { BsListTask } from 'react-icons/bs';
-import { IoMdNotificationsOutline } from 'react-icons/io';
+import { IoCreateOutline } from "react-icons/io5";
 import { CiLogout } from 'react-icons/ci';
 
 const Layout = () => {
@@ -31,7 +31,7 @@ const Layout = () => {
           { icon: <GoHome size={20} />, label: 'Home', path: '/' },
           { icon: <AiOutlineTeam size={20} />, label: 'Team', path: '/team' },
           { icon: <BsListTask size={20} />, label: 'Tasks', path: '/task' },
-          { icon: <IoMdNotificationsOutline size={20} />, label: 'Notification', path: '/notification' }
+          { icon: <IoCreateOutline size ={20} />, label: 'WhiteBoard', path: '/whiteboard' }
         ].map((item) => (
           <Button
             key={item.label}

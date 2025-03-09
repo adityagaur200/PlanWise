@@ -1,14 +1,38 @@
 import React, { useEffect, useState } from "react";
 import TaskBar from "./TaskBar";
+import { Box, Stack, Typography, CircularProgress } from "@mui/material";
 
 const TaskPage = () => {
+  const styles = {
+    header: {
+      width: "100%",
+      padding: "10px 0",
+      border: "1px solid #e0e0e0",
+      borderRadius: 2,
+      position: "sticky",
+      top: 0,
+      backgroundColor: "white",
+      zIndex: 1,
+      alignItems: "center",
+    },
+    headerText: {
+      display: "flex",
+      justifyContent: "center",
+    },
+    loaderContainer: {
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      height: "80vh", // Centering vertically
+    },
+  };
+
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // ✅ Get user info from localStorage
   const username = localStorage.getItem("username");
-  const jwtToken = localStorage.getItem("token"); // Ensure it's stored as "token"
+  const jwtToken = localStorage.getItem("token");
 
   useEffect(() => {
     if (!username || !jwtToken) {
@@ -21,10 +45,10 @@ const TaskPage = () => {
       try {
         const response = await fetch(`http://localhost:3030/api/Task/task/${username}`, {
           method: "GET",
-          headers: { 
+          headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${jwtToken}` // ✅ Attach JWT token
-          }
+            Authorization: `Bearer ${jwtToken}`,
+          },
         });
 
         if (!response.ok) {
@@ -43,16 +67,30 @@ const TaskPage = () => {
     fetchTasks();
   }, [username, jwtToken]);
 
-  if (loading) return <p>Loading tasks...</p>;
+  if (loading)
+    return (
+      <Box sx={styles.loaderContainer}>
+        <CircularProgress />
+      </Box>
+    );
+
   if (error) return <p style={{ color: "red" }}>{error}</p>;
 
   return (
-    <div>
-      <h1>Task List</h1>
-      {tasks.length === 0 ? <p>No tasks assigned</p> : tasks.map((task) => (
-        <TaskBar key={task.id} task={task} onTaskDone={() => console.log("Task Done")} />
-      ))}
-    </div>
+    <Stack direction={"column"} gap={1}>
+      <Box sx={styles.header}>
+        <Box sx={styles.headerText}>
+          <Typography fontSize={25} fontWeight={700}>Tasks</Typography>
+        </Box>
+      </Box>
+      {tasks.length === 0 ? (
+        <p>No tasks assigned</p>
+      ) : (
+        tasks.map((task) => (
+          <TaskBar key={task.id} task={task} onTaskDone={() => console.log("Task Done")} />
+        ))
+      )}
+    </Stack>
   );
 };
 

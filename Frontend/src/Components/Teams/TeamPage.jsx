@@ -24,7 +24,8 @@ const styles = {
   },
   headerText: {
     display: "flex",
-    marginLeft: "10%",
+    
+    justifyContent:"center"
   },
   userListContainer: {
     width: "90%",
@@ -50,7 +51,7 @@ const styles = {
 const TableHeader = () => (
   <Box sx={styles.header}>
     <Box sx={styles.headerText}>
-      <Typography fontSize={20} fontWeight={600}>TEAM</Typography>
+      <Typography fontSize={25} fontWeight={700}>TEAM MEMBERS</Typography>
     </Box>
   </Box>
 );

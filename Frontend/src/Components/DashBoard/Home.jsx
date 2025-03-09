@@ -13,16 +13,24 @@ const Home = () => {
     const [events, setEvents] = useState([]);
     const [openDialog, setOpenDialog] = useState(false);
     const [users, setUsers] = useState([]);
+    const [tasks, setTasks] = useState([]);
+    const [taskCounts, setTaskCounts] = useState({ toDo: 0, inProgress: 0, completed: 0 });
+    
     const [newEvent, setNewEvent] = useState({
-          taskName: '',
-          taskDescription: '',
-          taskStatus: '',
-          assignedTaskDate: '',
-          assignedTaskTime: '',
-          assignees: [],
-          deadline: '',});
+        taskName: '',
+        taskDescription: '',
+        taskStatus: '',
+        assignedTaskDate: '',
+        assignedTaskTime: '',
+        assignees: [],
+        deadline: '',
+    });
+
     const [calendarView, setCalendarView] = useState('month');
     const [currentDate, setCurrentDate] = useState(new Date());
+
+    // Get logged-in user from local storage
+    const loggedInUser = localStorage.getItem("username"); 
 
     useEffect(() => {
       const token = localStorage.getItem("token");
@@ -43,127 +51,161 @@ const Home = () => {
           setUsers(data);
           }).catch(error => console.error("Error fetching users:", error));
           }, []);
-  
+          const handleAddEvent = async () => {
+            const token = localStorage.getItem("token");
+            if (!token) {
+              console.error("No token found! User may not be logged in.");
+              return;
+            }
+          
+            try {
+              console.log("Sending Task Data:", JSON.stringify(newEvent, null, 2));
+          
+              const response = await fetch("http://localhost:3030/api/Task/create", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${token}`,
+                },
+                body: JSON.stringify(newEvent),
+                credentials: "include",
+              });
+          
+              console.log("Response Status:", response.status);
+          
+              if (response.status === 401) {
+                console.error("Unauthorized: Invalid or expired token.");
+                alert("Session expired. Please log in again.");
+                return;
+              }
+          
+              const contentType = response.headers.get("content-type");
+              if (!contentType || !contentType.includes("application/json")) {
+                console.warn("Unexpected response type:", contentType);
+                return;
+              }
+          
+              const responseData = await response.json();
+              console.log("Response Data:", responseData);
+          
+              if (response.ok) {
+                setEvents([...events, {
+                  title: newEvent.taskName,
+                  start: new Date(`${newEvent.assignedTaskDate}T${newEvent.assignedTaskTime}`),
+                  end: new Date(newEvent.deadline),
+                }]);
+                setOpenDialog(false);
+                setNewEvent({ taskName: '', taskDescription: '', taskStatus: '', assignedTaskDate: '', assignedTaskTime: '', assignees: [], deadline: '' });
+              } else {
+                console.error("Failed to create task:", responseData);
+              }
+            } catch (error) {
+              console.error("Error creating task:", error);
+            }
+          };
+          
+    // Fetch tasks and filter based on the logged-in user
+    useEffect(() => {
+      const token = localStorage.getItem("token");
 
-        const handleSelectSlot = ({ start }) => {
-          setNewEvent({
-          ...newEvent,
-          assignedTaskDate: moment(start).format('YYYY-MM-DD'),
-          assignedTaskTime: moment(start).format('HH:mm'),
-          });
-          setOpenDialog(true);};
-
-    const handleAddEvent = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      console.error("No token found! User may not be logged in.");
-      return;
-    }
-  
-    try {
-      console.log("Sending Task Data:", JSON.stringify(newEvent, null, 2));
-  
-      const response = await fetch("http://localhost:3030/api/Task/create", {
-        method: "POST",
+      fetch("http://localhost:3030/api/Task/task", {
+        method: "GET",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`,
         },
-        body: JSON.stringify(newEvent),
-        credentials: "include",
-      });
-  
-      console.log("Response Status:", response.status);
-  
-      if (response.status === 401) {
-        console.error("Unauthorized: Invalid or expired token.");
-        alert("Session expired. Please log in again.");
-        return;
-      }
-  
-      const contentType = response.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        console.warn("Unexpected response type:", contentType);
-        return;
-      }
-  
-      const responseData = await response.json();
-      console.log("Response Data:", responseData);
-  
-      if (response.ok) {
-        setEvents([...events, {
-          title: newEvent.taskName,
-          start: new Date(`${newEvent.assignedTaskDate}T${newEvent.assignedTaskTime}`),
-          end: new Date(newEvent.deadline),
-        }]);
-        setOpenDialog(false);
-        setNewEvent({ taskName: '', taskDescription: '', taskStatus: '', assignedTaskDate: '', assignedTaskTime: '', assignees: [], deadline: '' });
-      } else {
-        console.error("Failed to create task:", responseData);
-      }
-    } catch (error) {
-      console.error("Error creating task:", error);
-    }
-  };
-  
-  
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log("Fetched Tasks:", data);
 
-  return (
-    <Stack direction={'column'} spacing={4} sx={{ p: 3, height: "95vh" }}>
-      {/* Stats Section */}
-      <Stack direction={'row'} spacing={3}>
-        {[{ title: 'Total Tasks', count: 10, color: '#1976d2' },{ title: 'In Progress', count: 5, color: '#f44336' }, { title: 'Completed', count: 5, color: '#2e7d32' }].map((stat, index) => (
-          <Container key={index} sx={{ width: '33%', height: '150px', backgroundColor: stat.color, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 2 }}>
-            <Typography sx={{ color: 'white' }} fontSize={20} fontWeight={600}>{stat.title} : {stat.count}</Typography>
-          </Container>
-        ))}
-      </Stack>
+        // Filter tasks where the logged-in user is in assignees
+        const userTasks = data.filter(task => task.assignees.includes(loggedInUser));
+        setTasks(userTasks);
 
-      {/* Chart and Calendar Section */}
-      <Stack direction={'row'} spacing={3} sx={{ alignItems: 'flex-start' }}>
-        <Box sx={{ flex: 2 }}>
-          <Calendar
-            localizer={localizer}
-            events={events}
-            startAccessor="start"
-            endAccessor="end"
-            selectable
-            onSelectSlot={handleSelectSlot}
-            view={calendarView}
-            onView={setCalendarView}
-            date={currentDate}
-            onNavigate={setCurrentDate}
-            style={{ height: 500, backgroundColor: 'white', padding: '20px', borderRadius: '8px' }}
-          />
-        </Box>
-        <Box sx={{ 
-            flex: 1, 
-            backgroundColor: 'white', 
-            p: 2, 
-            borderRadius: '8px', 
-            display: 'flex', 
-            flexDirection: 'column', // Stack chart & legend vertically
-            alignItems: 'center', 
-            gap: 2 // Adds space between chart and legend
-              }}>
-        <PieChart
-        series={[
-            {
-              data: [
-                      { id: 0, value: 10, label: 'To Do' },
-                      { id: 1, value: 15, label: 'In Progress' },
-                      { id: 2, value: 20, label: 'Completed' }],
-            }
-            ]}
-            width={350}
-            height={200}
+        // Count tasks by status
+        const toDoCount = userTasks.filter(task => task.taskStatus === "To Do").length;
+        const inProgressCount = userTasks.filter(task => task.taskStatus === "In Progress").length;
+        const completedCount = userTasks.filter(task => task.taskStatus === "Completed").length;
+
+        setTaskCounts({ toDo: toDoCount, inProgress: inProgressCount, completed: completedCount });
+
+        // Map tasks to calendar events
+        const mappedEvents = userTasks.map(task => ({
+          title: task.taskName,
+          start: new Date(`${task.assignedTaskDate}T00:00:00`),
+          end: new Date(task.deadline),
+        }));
+
+        setEvents(mappedEvents);
+      })
+      .catch(error => console.error("Error fetching tasks:", error));
+    }, [loggedInUser]);
+
+    const handleSelectSlot = ({ start }) => {
+        setNewEvent({
+          ...newEvent,
+          assignedTaskDate: moment(start).format('YYYY-MM-DD'),
+          assignedTaskTime: moment(start).format('HH:mm'),
+        });
+        setOpenDialog(true);
+    };
+
+    return (
+      <Stack direction={'column'} spacing={4} sx={{ p: 3, height: "95vh" }}>
+        {/* Stats Section */}
+        <Stack direction={'row'} spacing={3}>
+          {[{ title: 'Total Tasks', count: taskCounts.toDo + taskCounts.inProgress + taskCounts.completed, color: '#1976d2' },
+            { title: 'In Progress', count: taskCounts.inProgress, color: '#f44336' },
+            { title: 'Completed', count: taskCounts.completed, color: '#2e7d32' }].map((stat, index) => (
+            <Container key={index} sx={{ width: '33%', height: '150px', backgroundColor: stat.color, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 2 }}>
+              <Typography sx={{ color: 'white' }} fontSize={20} fontWeight={600}>{stat.title} : {stat.count}</Typography>
+            </Container>
+          ))}
+        </Stack>
+
+        {/* Chart and Calendar Section */}
+        <Stack direction={'row'} spacing={3} sx={{ alignItems: 'flex-start' }}>
+          <Box sx={{ flex: 2 }}>
+            <Calendar
+              localizer={localizer}
+              events={events}
+              startAccessor="start"
+              endAccessor="end"
+              selectable
+              onSelectSlot={handleSelectSlot}
+              view={calendarView}
+              onView={setCalendarView}
+              date={currentDate}
+              onNavigate={setCurrentDate}
+              style={{ height: 500, backgroundColor: 'white', padding: '20px', borderRadius: '8px' }}
             />
+          </Box>
+          <Box sx={{ 
+              flex: 1, 
+              backgroundColor: 'white', 
+              p: 2, 
+              borderRadius: '8px', 
+              display: 'flex', 
+              flexDirection: 'column',
+              alignItems: 'center', 
+              gap: 2 
+            }}>
+            <PieChart
+              series={[{
+                data: [
+                  { id: 0, value: taskCounts.toDo, label: 'To Do' },
+                  { id: 1, value: taskCounts.inProgress, label: 'In Progress' },
+                  { id: 2, value: taskCounts.completed, label: 'Completed' }
+                ],
+              }]}
+              width={350}
+              height={200}
+            />
+          </Box>
+        </Stack>
 
- 
-        </Box>
-    </Stack>
-
-      {/* Add Event Dialog */}
+        {/* Add Event Dialog */}
       <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
         <DialogTitle>Add New Task</DialogTitle>
         <DialogContent>
@@ -199,8 +241,8 @@ const Home = () => {
           <Button onClick={handleAddEvent} variant="contained" color="primary">Add Task</Button>
         </DialogActions>
       </Dialog>
-    </Stack>
-  );
+      </Stack>
+    );
 };
 
 export default Home;

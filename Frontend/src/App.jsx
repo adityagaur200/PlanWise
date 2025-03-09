@@ -5,9 +5,9 @@ import SignUp from './Components/AuthPage/SignUp';
 import LogIn from './Components/AuthPage/Login';
 import TeamPage from './Components/Teams/TeamPage';
 import ChatRoom from './Components/Teams/ChatRoom';
-import NotificationPage from './Components/Notification/NotificationPage';
 import TaskPage from './Components/TaskPage/TaskPage';
 import VideoCall from './Components/Teams/VideoCall';
+import WhiteBoard from './Components/WhiteBoard/WhiteBoard';
 
 // Function to check if user is authenticated
 const isAuthenticated = () => {
@@ -40,7 +40,7 @@ function App() {
           <Route path="team" element={<TeamPage />} />
           <Route path="chat" element={<ChatRoom />} />
           <Route path='videocall' element={<VideoCall/>}/>
-          <Route path="notification" element={<NotificationPage />} />
+          <Route path='whiteboard' element={<WhiteBoard/>}/>
           <Route path="task" element={<TaskPage />} />
         </Route>
       </Routes>
