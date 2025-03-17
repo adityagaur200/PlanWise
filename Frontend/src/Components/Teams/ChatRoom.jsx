@@ -84,11 +84,11 @@ const ChatRoom = () => {
 
   return (
     <Stack spacing={2} sx={{ width: "100%", height: "100vh", padding: "20px" }}>
-      <Stack direction={"row"} justifyContent={"space-evenly"}>
+      <Stack direction={"row"} justifyContent={"space-between"}>
       <Typography variant="h5" fontWeight={600}>
         Chat with {receiver || "Unknown"}
       </Typography>
-      <CiVideoOn  onClick={handleVideoCall}/>
+      <CiVideoOn size={30} cursor={"pointer"} onClick={handleVideoCall}/>
       </Stack>
 
       <Box sx={{ flex: 1, overflowY: "auto", border: "1px solid #ddd", padding: 2, borderRadius: 2 }}>
