@@ -1,7 +1,5 @@
 package com.backend.backend.Services;
 
-import com.backend.backend.DTO.TaskRequest;
-import com.backend.backend.DTO.TaskResponse;
 import com.backend.backend.Model.Task;
 import com.backend.backend.Repository.TaskRepo;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,45 +22,29 @@ public class TaskService {
         this.webClientBuilder = webClientBuilder;
     }
 // CREATING TASK SERVICE
-    public Task createTask(TaskRequest taskRequest) {
-    // Mapping request to Task model
-        Task task = Task.builder()
-            .assignedTaskDate(taskRequest.getAssignedTaskDate())
-            .assignedTaskTime(taskRequest.getAssignedTaskTime())
-            .taskStatus(taskRequest.getTaskStatus())
-            .taskName(taskRequest.getTaskName())
-            .deadline(taskRequest.getDeadline())
-            .assignees(taskRequest.getAssignees())
-            .build();
-
-    // Saving task in DB and returning it
+    public Task createTask(Task task) {
     return taskRepo.save(task);
 }
 
 
     // CREATE GET TASK SERVICE TO GET ALL THE TASKS.
-    public List<TaskResponse> getTasks()
+    public List<Task> getTasks()
     {
         List<Task> tasks = taskRepo.findAll();
-        return tasks.stream().map(this:: mapToTaskResponse).toList();
-
+        //return tasks.stream().map(this:: mapToTaskResponse).toList();
+        return tasks;
     }
 
 // MAPPING TO MY TASKRESPONSE DTO.
-    private TaskResponse mapToTaskResponse(Task task) {
-        TaskResponse taskResponse = TaskResponse.builder().id(task.getid())
-                               .taskDescription(task.getTaskDescription()).assignedTaskDate(task.getAssignedTaskDate()).taskName(task.getTaskName())
-                               .assignees(task.getAssignees()).deadline(task.getDeadline()).taskStatus(task.getTaskStatus()).build();
-                           return taskResponse;
-                       }
 
-// CREATING SERVICE FOR FILTER THE TASK ON THE BASICS OF USER
-    public List<TaskResponse> getFilterTask(String user, String jwtToken) {
+
+//// CREATING SERVICE FOR FILTER THE TASK ON THE BASICS OF USER
+    public List<Task> getFilterTask(String user, String jwtToken) {
             //USING WEBCLIENT AND SEND AND RETRIVEING THE DATA.
-            TaskResponse[] TaskResponseArray = webClientBuilder.build().get()
+            Task[] TaskResponseArray = webClientBuilder.build().get()
                     .uri("http://localhost:3030/api/Task/task")
                     .headers(httpHeaders -> httpHeaders.setBearerAuth(jwtToken))
-               .retrieve().bodyToMono(TaskResponse[].class).block();
+               .retrieve().bodyToMono(Task[].class).block();
        if(TaskResponseArray == null)
        {
            return List.of();
@@ -72,27 +54,21 @@ public class TaskService {
     }
 
 // UPDATING THE RESPONSE
-    public List<TaskResponse> getUpdatedTask(String id, TaskRequest taskRequest)
+    public List<Task> getUpdatedTask(String id)
     {
         Optional<Task> taskOptional = taskRepo.findById(id);
 
         if (taskOptional.isPresent()) {
             Task task = taskOptional.get();
-            task.setTaskStatus(taskRequest.getTaskStatus()); // ✅ Update status
-            taskRepo.save(task); // ✅ Save changes
-            return List.of(mapToTaskupdatedResponse(task));
+            task.setTaskStatus(task.getTaskStatus()); // ✅ Update status
+            return (List<Task>) taskRepo.save(task); // ✅ Save changes
+
         }
         else {
         throw new RuntimeException("Task not found with id: " + id);
         }
     }
 
-    private TaskResponse mapToTaskupdatedResponse(Task task)
-    {
-        return TaskResponse.builder().taskStatus(task.getTaskStatus()).build();
-    }
 
 
 }
-
-

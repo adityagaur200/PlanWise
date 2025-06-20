@@ -1,7 +1,5 @@
 package com.backend.backend.Controller;
 
-import com.backend.backend.DTO.TaskRequest;
-import com.backend.backend.DTO.TaskResponse;
 import com.backend.backend.Model.Task;
 import com.backend.backend.Repository.TaskRepo;
 import com.backend.backend.Services.TaskService;
@@ -14,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.logging.Logger;
 
 @RestController
@@ -34,8 +31,8 @@ public class TaskController
 
     //CREATING TASK
     @PostMapping("/create")
-    public ResponseEntity<Map<String, String>> createTask(@RequestBody TaskRequest taskRequest) {
-        taskService.createTask(taskRequest);
+    public ResponseEntity<Map<String, String>> createTask(@RequestBody Task task) {
+        taskService.createTask(task);
 
         // Sending a JSON response back
         Map<String, String> response = new HashMap<>();
@@ -46,14 +43,14 @@ public class TaskController
 
     //GETTING TASK
     @GetMapping("/task")
-    public List<TaskResponse> getTasks()
+    public List<Task> getTasks()
     {
         return taskService.getTasks();
     }
 
     //GETTING TASK BY FILTER THE USER
     @GetMapping("/task/{user}")
-    public List<TaskResponse> getFilterTask(@PathVariable String user, HttpServletRequest request) {
+    public List<Task> getFilterTask(@PathVariable String user, HttpServletRequest request) {
         // Retrieve JWT Token from Authorization header
         String authHeader = request.getHeader("Authorization");
 
@@ -69,16 +66,6 @@ public class TaskController
         return taskService.getFilterTask(user, jwtToken);
     }
 
-    //UPDATING THE TASK.
-    @PutMapping("/task/{id}")
-    public ResponseEntity<?> updateTask(@PathVariable String id, @RequestBody TaskRequest taskRequest) {
-        try {
-            List<TaskResponse> updatedTask = taskService.getUpdatedTask(id, taskRequest);
-            return ResponseEntity.ok(updatedTask); // ✅ Return proper HTTP response
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage()); // ✅ Handle task not found
-        }
-    }
 
 
 

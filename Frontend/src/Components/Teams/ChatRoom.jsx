@@ -1,33 +1,41 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Client } from "@stomp/stompjs";
-import { Box, Button, Stack, TextField, Typography } from "@mui/material";
+import {
+  Avatar,
+  Box,
+  Button,
+  Paper,
+  Stack,
+  TextField,
+  Typography,
+} from "@mui/material";
 import { CiVideoOn } from "react-icons/ci";
 
 const ChatRoom = () => {
   const location = useLocation();
-  const receiver = location.state?.receiver; // Selected recipient
-  const sender = localStorage.getItem("username"); // Logged-in user
+  const receiver = location.state?.receiver;
+  const sender = localStorage.getItem("username");
   const [message, setMessage] = useState("");
+  const[isOnline,setisOnline]=useState(false);
   const [messages, setMessages] = useState([]);
   const stompClientRef = useRef(null);
   const messagesEndRef = useRef(null);
 
   const navigate = useNavigate();
-  const handleVideoCall =()=>
-  {
-    navigate("/videocall", { state: { receiver } })
-  }
+
+  const handleVideoCall = () => {
+    navigate("/videocall", { state: { receiver } });
+  };
 
   useEffect(() => {
     const client = new Client({
-      brokerURL: "ws://localhost:3030/ws/websocket", // ✅ Correct WebSocket URL
+      brokerURL: "ws://localhost:3030/ws/websocket",
       reconnectDelay: 5000,
       debug: (str) => console.log(str),
       onConnect: () => {
         console.log("✅ Connected to WebSocket");
-
-        // ✅ Subscribe to private messages
+        setisOnline(true);
         client.subscribe(`/user/${sender}/private`, (message) => {
           try {
             const receivedMessage = JSON.parse(message.body);
@@ -52,6 +60,7 @@ const ChatRoom = () => {
     return () => {
       if (stompClientRef.current) {
         stompClientRef.current.deactivate();
+        setisOnline(false);
       }
     };
   }, [sender]);
@@ -74,7 +83,7 @@ const ChatRoom = () => {
     console.log("🚀 Sending message:", chatMessage);
 
     stompClientRef.current.publish({
-      destination: "/app/private-message", // ✅ Correct endpoint for private messaging
+      destination: "/app/private-message",
       body: JSON.stringify(chatMessage),
     });
 
@@ -83,55 +92,145 @@ const ChatRoom = () => {
   };
 
   return (
-    <Stack spacing={2} sx={{ width: "100%", height: "100vh", padding: "20px" }}>
-      <Stack direction={"row"} justifyContent={"space-between"}>
-      <Typography variant="h5" fontWeight={600}>
-        Chat with {receiver || "Unknown"}
-      </Typography>
-      <CiVideoOn size={30} cursor={"pointer"} onClick={handleVideoCall}/>
-      </Stack>
+    <Stack
+      spacing={2}
+      sx={{
+        width: "100%",
+        height: "100vh",
+        p: { xs: 2, sm: 4 },
+        backgroundColor: "#f5f7fb",
+      }}
+    >
+      {/* Header */}
+      <Paper
+        elevation={2}
+        sx={{
+          borderRadius: 3,
+          p: 2,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          backgroundColor: "white",
+        }}
+      >
+        <Stack direction="row" spacing={2} alignItems="center">
+          <Box sx={{ position: "relative" }}>
+  <Avatar sx={{ bgcolor: "#1976d2" }}>
+    {receiver?.charAt(0).toUpperCase() || "?"}
+  </Avatar>
+  <Box
+    sx={{
+      position: "absolute",
+      bottom: 0,
+      right: 0,
+      width: 12,
+      height: 12,
+      borderRadius: "50%",
+      backgroundColor: isOnline ? "#4caf50" : "#9e9e9e",
+      border: "2px solid white",
+    }}
+  />
+</Box>
 
-      <Box sx={{ flex: 1, overflowY: "auto", border: "1px solid #ddd", padding: 2, borderRadius: 2 }}>
+          <Typography variant="h6" fontWeight={600}>
+            Chat with {receiver || "Unknown"}
+          </Typography>
+        </Stack>
+        <Box
+          onClick={handleVideoCall}
+          sx={{
+            cursor: "pointer",
+            p: 1,
+            borderRadius: "50%",
+            transition: "0.2s",
+            "&:hover": { backgroundColor: "#e3f2fd" },
+          }}
+        >
+          <CiVideoOn size={28} color="#1976d2" />
+        </Box>
+      </Paper>
+
+      {/* Message area */}
+      <Box
+        sx={{
+          flex: 1,
+          overflowY: "auto",
+          backgroundColor: "white",
+          p: 3,
+          borderRadius: 3,
+          boxShadow: 1,
+          border: "1px solid #e0e0e0",
+        }}
+      >
         {messages.length === 0 ? (
-          <Typography color="gray">No messages yet.</Typography>
+          <Typography color="gray" textAlign="center" mt={4}>
+            No messages yet.
+          </Typography>
         ) : (
           messages.map((msg, index) => (
             <Box
               key={index}
               sx={{
-                textAlign: msg.sender === sender ? "right" : "left",
-                marginBottom: 1,
+                display: "flex",
+                justifyContent: msg.sender === sender ? "flex-end" : "flex-start",
+                mb: 1.5,
               }}
             >
-              <Typography
+              <Box
                 sx={{
-                  display: "inline-block",
-                  padding: "8px 12px",
-                  borderRadius: "12px",
+                  maxWidth: "75%",
+                  p: 1.5,
+                  px: 2,
+                  borderRadius: 3,
                   backgroundColor: msg.sender === sender ? "#1976d2" : "#e0e0e0",
                   color: msg.sender === sender ? "white" : "black",
+                  fontSize: "0.95rem",
+                  lineHeight: 1.4,
                 }}
               >
                 {msg.content}
-              </Typography>
+              </Box>
             </Box>
           ))
         )}
         <div ref={messagesEndRef} />
       </Box>
 
-      <Stack direction="row" spacing={2}>
+      {/* Input bar */}
+      <Paper
+        elevation={2}
+        sx={{
+          borderRadius: 4,
+          p: 1.5,
+          display: "flex",
+          alignItems: "center",
+          backgroundColor: "white",
+        }}
+      >
         <TextField
-          fullWidth
-          variant="outlined"
-          placeholder="Type a message..."
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-        />
-        <Button variant="contained" onClick={sendMessage} disabled={!receiver}>
+  fullWidth
+  variant="outlined"
+  placeholder="Type a message..."
+  value={message}
+  onChange={(e) => setMessage(e.target.value)}
+  onKeyDown={(e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  }}
+  multiline
+/>
+
+        <Button
+          variant="contained"
+          onClick={sendMessage}
+          disabled={!receiver}
+          sx={{ px: 3 }}
+        >
           Send
         </Button>
-      </Stack>
+      </Paper>
     </Stack>
   );
 };

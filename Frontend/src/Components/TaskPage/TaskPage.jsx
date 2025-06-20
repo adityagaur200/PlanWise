@@ -1,35 +1,21 @@
 import React, { useEffect, useState } from "react";
 import TaskBar from "./TaskBar";
-import { Box, Stack, Typography, CircularProgress } from "@mui/material";
+import {
+  Box,
+  Stack,
+  Typography,
+  CircularProgress,
+  Tabs,
+  Tab,
+  Paper,
+} from "@mui/material";
+import { MdMarkEmailRead } from "react-icons/md";
 
 const TaskPage = () => {
-  const styles = {
-    header: {
-      width: "100%",
-      padding: "10px 0",
-      border: "1px solid #e0e0e0",
-      borderRadius: 2,
-      position: "sticky",
-      top: 0,
-      backgroundColor: "white",
-      zIndex: 1,
-      alignItems: "center",
-    },
-    headerText: {
-      display: "flex",
-      justifyContent: "center",
-    },
-    loaderContainer: {
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      height: "80vh", // Centering vertically
-    },
-  };
-
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [tab, setTab] = useState(0);
 
   const username = localStorage.getItem("username");
   const jwtToken = localStorage.getItem("token");
@@ -67,30 +53,80 @@ const TaskPage = () => {
     fetchTasks();
   }, [username, jwtToken]);
 
-  if (loading)
+  const handleTabChange = (event, newValue) => {
+    setTab(newValue);
+  };
+
+  const getFilteredTasks = () => {
+    if (tab === 1) {
+      return tasks.filter((task) => task.assignees?.includes(username));
+    }
+    return tasks;
+  };
+
+  const filteredTasks = getFilteredTasks();
+
+  if (loading) {
     return (
-      <Box sx={styles.loaderContainer}>
+      <Box display="flex" justifyContent="center" alignItems="center" height="70vh">
         <CircularProgress />
       </Box>
     );
+  }
 
-  if (error) return <p style={{ color: "red" }}>{error}</p>;
+  if (error) {
+    return <Typography color="error">{error}</Typography>;
+  }
 
   return (
-    <Stack direction={"column"} gap={1}>
-      <Box sx={styles.header}>
-        <Box sx={styles.headerText}>
-          <Typography fontSize={25} fontWeight={700}>Tasks</Typography>
+    <Box px={{ xs: 2, sm: 4 }} py={3}>
+      <Paper elevation={2} sx={{ borderRadius: 2, p: 2 }}>
+        <Tabs
+          value={tab}
+          onChange={handleTabChange}
+          indicatorColor="primary"
+          textColor="primary"
+          variant="fullWidth"
+        >
+          <Tab label="All" />
+          <Tab label="Mentions" />
+        </Tabs>
+
+        <Box mt={3}>
+          {filteredTasks.length === 0 ? (
+            <Box textAlign="center" mt={8}>
+              <MdMarkEmailRead size={64} color="#90caf9" />
+              <Typography variant="h6" color="textSecondary" mt={2}>
+                You're all caught up!
+              </Typography>
+              <Typography variant="body2" color="textSecondary">
+                No tasks found here right now. Come back later.
+              </Typography>
+            </Box>
+          ) : (
+            <Stack spacing={2}>
+              {filteredTasks.map((task) => (
+                <Box
+                  key={task.id}
+                  component={Paper}
+                  elevation={1}
+                  sx={{
+                    borderRadius: 2,
+                    transition: "all 0.3s",
+                    "&:hover": {
+                      boxShadow: 4,
+                      transform: "scale(1.01)",
+                    },
+                  }}
+                >
+                  <TaskBar task={task} onTaskDone={() => console.log("Task Done")} />
+                </Box>
+              ))}
+            </Stack>
+          )}
         </Box>
-      </Box>
-      {tasks.length === 0 ? (
-        <p>No tasks assigned</p>
-      ) : (
-        tasks.map((task) => (
-          <TaskBar key={task.id} task={task} onTaskDone={() => console.log("Task Done")} />
-        ))
-      )}
-    </Stack>
+      </Paper>
+    </Box>
   );
 };
 

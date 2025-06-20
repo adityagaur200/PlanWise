@@ -1,6 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { CiChat1 } from "react-icons/ci";
-import { Avatar, Box, Stack, Typography, CircularProgress } from "@mui/material";
+import {
+  Avatar,
+  Box,
+  Stack,
+  Typography,
+  CircularProgress,
+  Paper,
+} from "@mui/material";
 import { useNavigate } from "react-router-dom";
 
 const styles = {
@@ -10,48 +17,53 @@ const styles = {
     display: "flex",
     flexDirection: "column",
     padding: "20px",
+    backgroundColor: "#f9f9f9",
   },
   header: {
     width: "90%",
-    padding: "10px 0",
-    border: "1px solid #e0e0e0",
-    borderRadius: 2,
+    padding: "15px",
+    borderRadius: 3,
     position: "sticky",
     top: 0,
     backgroundColor: "white",
     zIndex: 1,
     alignItems: "center",
+    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
   },
   headerText: {
     display: "flex",
-    
-    justifyContent:"center"
+    justifyContent: "center",
   },
   userListContainer: {
     width: "90%",
     flex: 1,
     overflowY: "auto",
-    border: "1px solid #e0e0e0",
-    borderRadius: 2,
     marginTop: 2,
-    padding: "10px 0",
   },
   userBar: {
-    width: "90%",
-    border: "1px solid #e0e0e0",
-    borderRadius: 2,
-    margin: "8px 0",
+    width: "100%",
+    backgroundColor: "white",
+    borderRadius: 3,
+    marginBottom: "10px",
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    padding: "10px",
+    padding: "12px 20px",
+    boxShadow: "0 2px 12px rgba(0,0,0,0.06)",
+    transition: "transform 0.2s ease, box-shadow 0.2s ease",
+    "&:hover": {
+      transform: "translateY(-2px)",
+      boxShadow: "0 4px 14px rgba(0,0,0,0.1)",
+    },
   },
 };
 
 const TableHeader = () => (
   <Box sx={styles.header}>
     <Box sx={styles.headerText}>
-      <Typography fontSize={25} fontWeight={700}>TEAM MEMBERS</Typography>
+      <Typography fontSize={28} fontWeight={700}>
+        TEAM MEMBERS
+      </Typography>
     </Box>
   </Box>
 );
@@ -62,7 +74,7 @@ const TeamPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const currentUser = localStorage.getItem("username"); // Get logged-in username
+  const currentUser = localStorage.getItem("username");
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -110,27 +122,42 @@ const TeamPage = () => {
         ) : error ? (
           <Typography color="error">{error}</Typography>
         ) : (
-          users.map((user, index) => (
-            user.username !== currentUser && ( // Prevent self-chatting
-              <Box key={index} sx={styles.userBar}>
-                <Stack direction="row" spacing={2} alignItems="center">
-                  <Avatar sx={{ width: 40, height: 40 }} />
-                  <Stack direction="column" spacing={0} padding={0}>
-                    <Typography fontSize={16} fontWeight={600}>{user.username}</Typography>
-                    <Typography fontSize={12} color="GrayText">{user.email}</Typography>
+          users.map(
+            (user, index) =>
+              user.username !== currentUser && (
+                <Paper key={index} sx={styles.userBar}>
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Avatar sx={{ width: 48, height: 48, bgcolor: "#4A90E2" }}>
+                      {user.username.charAt(0).toUpperCase()}
+                    </Avatar>
+                    <Stack direction="column" spacing={0}>
+                      <Typography fontSize={17} fontWeight={600}>
+                        {user.username}
+                      </Typography>
+                      <Typography fontSize={13} color="gray">
+                        {user.email}
+                      </Typography>
+                    </Stack>
                   </Stack>
-                </Stack>
 
-                <Box display="flex" sx={{ marginRight: "5%" }}>
-                  <CiChat1
-                    size={20}
-                    style={{ cursor: "pointer" }}
-                    onClick={() => navigate("/chat", { state: { receiver: user.username } })}
-                  />
-                </Box>
-              </Box>
-            )
-          ))
+                  <Box
+                    display="flex"
+                    sx={{
+                      cursor: "pointer",
+                      color: "#4A90E2",
+                      "&:hover": { color: "#007BFF" },
+                    }}
+                  >
+                    <CiChat1
+                      size={24}
+                      onClick={() =>
+                        navigate("/chat", { state: { receiver: user.username } })
+                      }
+                    />
+                  </Box>
+                </Paper>
+              )
+          )
         )}
       </Stack>
     </Stack>

@@ -1,7 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { Client } from "@stomp/stompjs";
-import { Box, Button, Typography, Stack, Paper } from "@mui/material";
+import { Box, Button, Typography, Stack, IconButton } from "@mui/material";
+import MicIcon from "@mui/icons-material/Mic";
+import MicOffIcon from "@mui/icons-material/MicOff";
+import VideocamIcon from "@mui/icons-material/Videocam";
+import VideocamOffIcon from "@mui/icons-material/VideocamOff";
 
 const VideoCall = () => {
   const location = useLocation();
@@ -10,6 +14,9 @@ const VideoCall = () => {
 
   const [localStream, setLocalStream] = useState(null);
   const [remoteStream, setRemoteStream] = useState(null);
+  const [micEnabled, setMicEnabled] = useState(true);
+  const [camEnabled, setCamEnabled] = useState(true);
+
   const stompClientRef = useRef(null);
   const peerConnectionRef = useRef(null);
   const remoteVideoRef = useRef(null);
@@ -74,7 +81,7 @@ const VideoCall = () => {
 
     peerConnectionRef.current.ontrack = (event) => {
       console.log("📡 Received Remote Track:", event.streams[0]);
-      setRemoteStream(event.streams[0]); // ✅ Properly setting remote stream
+      setRemoteStream(event.streams[0]);
     };
 
     peerConnectionRef.current.onicecandidate = (event) => {
@@ -102,9 +109,7 @@ const VideoCall = () => {
 
     const offer = await peerConnectionRef.current.createOffer();
     await peerConnectionRef.current.setLocalDescription(offer);
-    console.log("📡 Sending Offer:", offer);
-
-    sendSignalingData({ type: "offer", sdp: offer.sdp }); // ✅ Only send `sdp`
+    sendSignalingData({ type: "offer", sdp: offer.sdp });
   };
 
   const endCall = () => {
@@ -117,30 +122,20 @@ const VideoCall = () => {
 
   const handleSignalingData = async (data) => {
     try {
-      console.log("📩 Handling WebRTC Signaling Data:", data);
-
       if (!peerConnectionRef.current) {
-        console.warn("⚠️ Peer connection not initialized yet, setting up...");
         setupPeerConnection();
       }
 
       if (data.type === "offer" && data.sdp) {
-        console.log("🔹 Received Offer with SDP:", data.sdp);
-
         await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription({ type: "offer", sdp: data.sdp }));
-
         const answer = await peerConnectionRef.current.createAnswer();
         await peerConnectionRef.current.setLocalDescription(answer);
-        console.log("📡 Sending Answer:", answer);
-
         sendSignalingData({ type: "answer", sdp: answer.sdp });
       } else if (data.type === "answer" && data.sdp) {
         await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription({ type: "answer", sdp: data.sdp }));
-        console.log("✅ Remote description set successfully (Answer)");
       } else if (data.type === "candidate" && data.candidate) {
         const iceCandidate = new RTCIceCandidate(data.candidate);
         await peerConnectionRef.current.addIceCandidate(iceCandidate);
-        console.log("✅ ICE Candidate added:", iceCandidate);
       }
     } catch (error) {
       console.error("❌ Error handling signaling data:", error);
@@ -156,54 +151,144 @@ const VideoCall = () => {
     }
   };
 
-  return (
-    <Box 
-      sx={{ 
-        width: "80vw", height: "100vh", 
-        display: "flex", flexDirection: "column", alignItems: "center", 
-        justifyContent: "center", gap: 3, backgroundColor: "#f5f5f5" 
-      }}
-    >
-      <Typography variant="h4" fontWeight={600}>
-        Video Call with {receiver || "Unknown"}
-      </Typography>
+  const toggleMic = () => {
+    if (localStream) {
+      localStream.getAudioTracks().forEach((track) => {
+        track.enabled = !track.enabled;
+      });
+      setMicEnabled(!micEnabled);
+    }
+  };
 
-      <Stack
-        direction="row"
-        spacing={2}
+  const toggleCamera = () => {
+    if (localStream) {
+      localStream.getVideoTracks().forEach((track) => {
+        track.enabled = !track.enabled;
+      });
+      setCamEnabled(!camEnabled);
+    }
+  };
+  const shareScreen = async () => {
+  try {
+    const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+    const screenTrack = screenStream.getVideoTracks()[0];
+
+    // Replace the current video track being sent
+    const sender = peerConnectionRef.current
+      .getSenders()
+      .find((s) => s.track.kind === "video");
+
+    if (sender) {
+      sender.replaceTrack(screenTrack);
+    }
+
+    // Update the local video preview
+    if (localVideoRef.current) {
+      localVideoRef.current.srcObject = screenStream;
+    }
+
+    // When screen sharing stops, revert back to camera
+    screenTrack.onended = async () => {
+      const cameraStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      setLocalStream(cameraStream);
+
+      const newCameraTrack = cameraStream.getVideoTracks()[0];
+      if (sender) {
+        sender.replaceTrack(newCameraTrack);
+      }
+      localVideoRef.current.srcObject = cameraStream;
+    };
+  } catch (error) {
+    console.error("❌ Error sharing screen:", error);
+  }
+};
+
+
+  return (
+    <Box sx={{ position: "relative", width: "82vw", height: "100vh", overflow: "hidden", backgroundColor: "#000" }}>
+      {/* Remote Video Full Screen */}
+      <video
+        ref={remoteVideoRef}
+        autoPlay
+        playsInline
+        style={{
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          backgroundColor: "#333",
+        }}
+      />
+
+      {/* Local Video - small floating window */}
+      <Box
         sx={{
-          width: "80%",
-          height: "60vh",
-          display: "flex",
-          justifyContent: "center",
+          position: "absolute",
+          bottom: 16,
+          right: 16,
+          width: 200,
+          height: 150,
+          border: "2px solid #1976d2",
+          borderRadius: "8px",
+          overflow: "hidden",
+          zIndex: 10,
+          backgroundColor: "#000",
         }}
       >
-        <Paper sx={{ flex: 1, border: "2px solid #1976d2", borderRadius: "12px", overflow: "hidden" }}>
-          <video ref={localVideoRef} autoPlay playsInline muted style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-          <Typography
-            variant="caption"
-            sx={{
-              position: "absolute", bottom: 8, left: 8,
-              background: "rgba(0,0,0,0.6)", color: "white", padding: "4px 8px", borderRadius: "8px",
-            }}
-          >
-            You
-          </Typography>
-        </Paper>
+        <video
+          ref={localVideoRef}
+          autoPlay
+          playsInline
+          muted
+          style={{ width: "100%", height: "100%", objectFit: "cover" }}
+        />
+      </Box>
 
-        <Paper sx={{ flex: 1, border: "2px solid #e53935", borderRadius: "12px", overflow: "hidden" }}>
-          <video ref={remoteVideoRef} autoPlay playsInline style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-        </Paper>
-      </Stack>
-
-      <Stack direction="row" spacing={2}>
+      {/* Controls */}
+      <Box
+        sx={{
+          position: "absolute",
+          bottom: 24,
+          left: "50%",
+          transform: "translateX(-50%)",
+          display: "flex",
+          gap: 2,
+          zIndex: 20,
+        }}
+      >
         <Button variant="contained" color="success" onClick={startCall} disabled={!localStream}>
           Start Call
         </Button>
         <Button variant="contained" color="error" onClick={endCall} disabled={!remoteStream}>
           End Call
         </Button>
-      </Stack>
+        <IconButton onClick={toggleMic} color="primary">
+          {micEnabled ? <MicIcon /> : <MicOffIcon />}
+        </IconButton>
+        <IconButton onClick={toggleCamera} color="primary">
+          {camEnabled ? <VideocamIcon /> : <VideocamOffIcon />}
+        </IconButton>
+        <Button variant="contained" color="primary" onClick={shareScreen}>
+          Share Screen
+        </Button>
+
+      </Box>
+
+      {/* Title */}
+      <Typography
+        variant="h6"
+        sx={{
+          position: "absolute",
+          top: 16,
+          left: 16,
+          zIndex: 20,
+          color: "white",
+          backgroundColor: "rgba(0,0,0,0.5)",
+          padding: "6px 12px",
+          borderRadius: "8px",
+        }}
+      >
+        Talking to: {receiver || "Unknown"}
+      </Typography>
     </Box>
   );
 };

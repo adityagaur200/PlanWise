@@ -8,6 +8,7 @@ import ChatRoom from './Components/Teams/ChatRoom';
 import TaskPage from './Components/TaskPage/TaskPage';
 import VideoCall from './Components/Teams/VideoCall';
 import WhiteBoard from './Components/WhiteBoard/WhiteBoard';
+import TeamChat from './Components/DMs/TeamChat';
 
 // Function to check if user is authenticated
 const isAuthenticated = () => {
@@ -42,6 +43,7 @@ function App() {
           <Route path='videocall' element={<VideoCall/>}/>
           <Route path='whiteboard' element={<WhiteBoard/>}/>
           <Route path="task" element={<TaskPage />} />
+          <Route path='/DM' element={<TeamChat/>}/>
         </Route>
       </Routes>
     </BrowserRouter>
