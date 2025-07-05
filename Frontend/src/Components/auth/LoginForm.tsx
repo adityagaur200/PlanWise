@@ -125,7 +125,7 @@ const LoginForm = ({ onLoginSuccess }: LoginFormProps) => {
             <CardHeader>
               <CardTitle>Register</CardTitle>
               <CardDescription>
-                Create a new account to get started.
+                Create a new account to get started.!!
               </CardDescription>
             </CardHeader>
             
