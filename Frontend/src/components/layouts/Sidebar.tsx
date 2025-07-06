@@ -49,7 +49,7 @@ export default function Sidebar() {
       <div className="p-4 border-b border-sidebar-border">
         <h2 className="text-xl font-bold text-sidebar-foreground flex items-center">
           <span className="bg-workspace-purple w-5 h-5 mr-2 rounded-md"></span>
-          SyncQ
+          SynQ
         </h2>
       </div>
       
@@ -136,7 +136,7 @@ export default function Sidebar() {
               {authApi.getCurrentUser()?.substring(0, 2).toUpperCase() || 'TS'}
             </div>
             <span className="ml-2 text-sidebar-foreground font-medium">
-              {authApi.getCurrentUser() || 'SyncQ'}
+              {authApi.getCurrentUser() || 'SynQ'}
             </span>
           </div>
           {isAuthenticated ? (
