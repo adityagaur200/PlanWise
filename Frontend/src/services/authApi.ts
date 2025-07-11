@@ -2,7 +2,7 @@
 import axios from 'axios';
 import { toast } from "sonner";
 
-const API_URL = "http://13.201.98.79:3030";
+const API_URL = "http://65.0.71.126/";
 
 // Add axios interceptor to include token in all requests
 axios.interceptors.request.use(

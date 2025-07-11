@@ -35,7 +35,7 @@ export interface TaskResponse {
 }
 
 // Base URL for the API
-const API_BASE_URL = "http://localhost:3030/api/Task";
+const API_BASE_URL = "http://65.0.71.126/api/Task";
 
 // Function to handle API errors
 const handleApiError = (error: unknown) => {
