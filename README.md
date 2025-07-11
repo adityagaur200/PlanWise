@@ -1,6 +1,6 @@
-# PlanWise
+# SynQ
 
-PlanWise is a smart management web application that helps users efficiently organize, plan, and optimize their tasks and workflows.
+SynQ is a smart management web application that helps users efficiently organize, plan, and optimize their tasks and workflows.
 
 ## 🚀 Features
 
@@ -24,8 +24,8 @@ PlanWise is a smart management web application that helps users efficiently orga
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/adityagaur200/PlanWise.git
-   cd PlanWise
+   git clone https://github.com/adityagaur200/SynQ.git
+   cd SynQ
    ```
 2. Set up the backend (Spring Boot):
    - Configure `application.properties`
