@@ -3,10 +3,12 @@ package com.backend.backend.Services;
 import com.backend.backend.Model.Task;
 import com.backend.backend.Repository.TaskRepo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -70,5 +72,8 @@ public class TaskService {
     }
 
 
-
+//    public Task deleteTask(String id) {
+//        taskRepo.delete(id);
+//        return taskRepo.findById(id).orElse(null);
+//    }
 }

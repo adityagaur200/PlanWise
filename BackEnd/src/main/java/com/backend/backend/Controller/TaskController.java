@@ -66,6 +66,16 @@ public class TaskController
         return taskService.getFilterTask(user, jwtToken);
     }
 
+    @GetMapping("/task/getupdate/{id}")
+    public List<Task> getUpdateTask(@PathVariable  String id) {
+        return taskService.getUpdatedTask(id);
+    }
+
+//    @DeleteMapping("/task/delete/{id}")
+//    public Task deleteTask(@PathVariable String id)
+//    {
+//        return taskService.deleteTask(id);
+//    }
 
 
 

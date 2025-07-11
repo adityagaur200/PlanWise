@@ -8,4 +8,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface TaskRepo extends MongoRepository<Task, String> {
 
+//    void delete(String id);
 }
